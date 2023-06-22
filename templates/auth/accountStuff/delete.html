@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delete page</title>
+</head>
+<body>
+    <h1 style="position: relative; text-align: center;">Delete</h1>
+    <form method="POST">
+        <div style="position: relative; text-align: center;">
+            <input type="text" name="customer_name" placeholder="name", value="{{customer_name}}">
+            <input type="password" name="customer_password" placeholder="password">
+            <h2 id="incorrect_h2", style="visibility: hidden;">Password or name is incorrect!</h2>
+            <br>
+            <br>
+            <button>Delete</button>
+    </div></form>
+<!--src="{{url_for('static', filename='index.js')}}"-->
+    <script type="text/javascript">
+if ({{success}}) {
+    console.log("success");
+} else {
+    elem = document.getElementById("incorrect_h2");
+    elem.style.visibility = "visible";
+    console.log("incorrect");
+}
+</script>
+</body>
+</html>

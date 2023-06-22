@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Account page</title>
+</head>
+<body>
+    <h1 style="position: relative; text-align: center;">Hello, {{customer_name}}</h1>
+    
+    <div style="position: relative; text-align: center;">
+        <a href="{{url_for("views.changePassPage", customer_name = customer_name )}}">Change Password</a>
+        <a href="{{url_for("views.deletePage", customer_name = customer_name )}}">Delete account</a>
+    </div>
+
+    <script type="text/javascript",
+    src="{{url_for('static', filename='index.js')}}"></script>
+</body>
+</html>

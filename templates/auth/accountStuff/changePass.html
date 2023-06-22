@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Change Password page</title>
+</head>
+<body>
+    <h1 style="position: relative; text-align: center;">Change Password Page</h1>
+    <form method="POST">
+        <div style="position: relative; text-align: center;">
+            <input type="text" name="customer_name" placeholder="name", value="{{customer_name}}">
+            <br>
+            <input type="password" name="old_customer_password" placeholder="old password">
+            <input type="password" name="new_customer_password" placeholder="new password">
+            <h2 id="incorrect_h2", style="visibility: hidden;">Password or name is incorrect!</h2>
+            <br>
+            <br>
+            <button>Change Password</button>
+    </div></form>
+<!--src="{{url_for('static', filename='index.js')}}"-->
+    <script type="text/javascript">
+if ({{success}}) {
+    console.log("success");
+} else {
+    elem = document.getElementById("incorrect_h2");
+    elem.style.visibility = "visible";
+    console.log("incorrect");
+}
+</script>
+</body>
+</html>
