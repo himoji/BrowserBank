@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Withdraw page</title>
+</head>
+<body>
+    <h1 style="position: relative; text-align: center;">Withdraw</h1>
+    <form method="POST">
+        <div style="position: relative; text-align: center;">
+            <input type="number" name="cash" placeholder="cash amount">
+            <h2 id="incorrect_h2", style="visibility: hidden;">something is incorrect!</h2>
+            <br>
+            <br>
+            <button>Withdraw</button>
+    </div></form>
+<!--src="{{url_for('static', filename='index.js')}}"-->
+    <script type="text/javascript">
+if ({{success}}) {
+    console.log("success");
+} else {
+    elem = document.getElementById("incorrect_h2");
+    elem.style.visibility = "visible";
+    console.log("incorrect");
+}
+</script>
+</body>
+</html>

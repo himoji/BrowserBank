@@ -78,8 +78,8 @@ class accountManagment:
                 return customer_name
         except: pass
         return "no_customer"
-      
-        
+
+
     def changePassword(customer_name, old_password, new_password) -> bool:
         '''
     ChngPass command to take user input and set it as password.\n
@@ -131,118 +131,85 @@ class accountManagment:
                 return True
         except: pass
         return False
-"""
+
 
 class atm():
-    def getCustomerNameById():
-        cursor = db.cursor()
-        cursor.execute(f'select customer_name from customers_table where customer_id = {self.current_customer_id};')
-        return cursor.fetchone()[0]
-    
-
-    def deposit(self) -> None:
+    def deposit(customer_name, cash) -> bool:
         '''
     'Deposit command to update CASH at customer_id.\n
     Cash += cash_input for user.\n
     takes 0 args, only asks inside of function.
     '''
+        cursor = db.cursor()
         try:
-            cash = int(input('How much do you want to deposit (input integer)?: '))
-            if cash < 0:
-                print("You cant take debt here!")
-                cash = str(cash)
-                cash = "nope"
-        except:
-            print("Deposit Only integers and positive numbers, ATM can not hold cents")
-
-        cursor.execute(f'update customers_table set customer_cash = customer_cash + {cash} where customer_id = "{self.current_customer_id}";') # type: ignore
-        self.printCashAmount()
+            if int(cash) >= 0 and securityCheck(customer_name)==False:
+                print("Depositing cash")
+                cursor.execute(f'update customers_table set customer_cash = customer_cash + {cash} where customer_name = "{customer_name}";')
+                cursor.close()
+                db.commit()
+                return True
+        except: pass
+        return False
 
 
-    def withdraw(self) -> None:
+    def withdraw(customer_name, cash) -> bool:
         '''
     Withdraw command to update CASH at customer_id.\n
     Cash -= cash_input for user.\n
     takes 0 args, only asks inside of function.
     '''
-        try: #check how much money customer have
-            cursor.execute(f'select customer_cash from customers_table where customer_id = {self.current_customer_id};')
-            result = cursor.fetchone()
-        except: pass
-
+        cursor = db.cursor()
         try:
-            cash = int(input('How much do you want to withdraw (input integer)?: '))
-            if cash < 0 or int(result[0]) - cash < 0: #type: ignore
-                print("You cant take debt here!")
-                cash = str(cash)
-                cash = "nope"
-        except:
-            print("Withdraw Only integers and positive numbers, ATM can not hold cents")
-
-        cursor.execute(f'update customers_table set customer_cash = customer_cash - {cash} where customer_id = "{self.current_customer_id}";') #type: ignore
-        self.printCashAmount()
+            if int(cash) >= 0 and securityCheck(customer_name)==False:
+                cursor.execute(f'update customers_table set customer_cash = customer_cash - {cash} where customer_name = "{customer_name}";')
+                cursor.close()
+                db.commit()
+                return True
+        except: pass
+        return False
 
 
-    def send(self) -> None:
+    def send(customer_name, cash, taker) -> bool:
         '''
     Send command to update CASH at customer_id[i] and customer_id[j].\n
     Sends cash from one user to another.\n
     takes 0 args, only asks inside of function.
     '''
-        cursor.execute('select customer_name from customers_table;')
-        
-        for i, name in enumerate(cursor.fetchall(), start=1):
-            print(f"{i}) {name}")
-        try:
-            taker_id = int(input('Send money to who? (taker id): '))
-        except: pass
+        cursor = db.cursor()
 
         try: #check how much money customer do have
-            cursor.execute(f'select customer_cash from customers_table where customer_id = {self.current_customer_id};')
-            cash_on_sender_card = cursor.fetchone()
-        except: pass
+            print("Checking cash")
+            cursor.execute(f'select customer_cash from customers_table where customer_name = "{customer_name}";')
+            cash_on_sender_card = cursor.fetchone()[0]
+            print(cash_on_sender_card)
+        except: return False
+
 
         try:
-            cash_to_send = int(input('How much do you want to withdraw (input integer)?: '))
-            if cash_to_send < 0 or int(cash_on_sender_card[0]) - cash_to_send < 0: #type: ignore
-                print("You cant take debt here!")
-                cash_to_send = str(cash_to_send)
-                cash_to_send = "nope"
-        except:
-            print("Only integers and positive numbers, ATM can not hold cents")
+            cash = int(cash)
+            cash_on_sender_card = int(cash_on_sender_card)
 
-        a = f'update customers_table set customer_cash = customer_cash - {cash_to_send} where customer_id = "{self.current_customer_id}";' # type: ignore
-        b = f'update customers_table set customer_cash = customer_cash + {cash_to_send} where customer_id = "{taker_id}";' # type: ignore
+            if cash >= 0 and cash_on_sender_card - cash >= 0 and securityCheck(customer_name, taker)==False:
+                print("Sending cash")
+                cursor.execute(f'update customers_table set customer_cash = customer_cash + {cash} where customer_name = "{taker}";')
+                print("send #1")
+                cursor.execute(f'update customers_table set customer_cash = customer_cash - {cash} where customer_name = "{customer_name}";')
+                print("send #2")
+                cursor.close()
+                db.commit()
+                return True
+        except: pass
+        return False
+    
 
-        cursor.execute(a)
-        cursor.execute(b)
+    def getCashAmount(customer_name):
+        cursor = db.cursor()
+        try:
+            cursor.execute(f'select customer_cash from customers_table where customer_name = "{customer_name}";')
+            customer_cash = cursor.fetchone()
+            cursor.close()
+            return customer_cash[0]
+        except: pass
 
-        self.printCashAmount()
-        self.printCashAmountById(taker_id) #type: ignore
 
-
-    def printCashAmountById(current_customer_id) -> None:
-        '''
-    Select command to print in terminal\n
-    Print in terminal amount of money of customer_id \n
-    Takes 1 positional arg: customer_id e.g. "1"
-    '''
-        cursor.execute(f'select customer_cash from customers_table where customer_id = "{current_customer_id}";')
-
-        result = cursor.fetchone()
-        print(f"#{current_customer_id}'s cash is now {result[0]}")
-        
-
-    def printCashAmount() -> None:
-        '''
-    Select command to print in terminal\n
-    Print in terminal amount of money of customer_id \n
-    Takes 1 positional arg: customer_id e.g. "1"
-    '''
-        cursor.execute(f'select customer_cash from customers_table where customer_id = "{self.current_customer_id}";')
-
-        result = cursor.fetchone()
-        print(f"#{self.current_customer_id}'s cash is now {result[0]}")
-
-"""
 
