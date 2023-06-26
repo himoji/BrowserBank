@@ -196,17 +196,22 @@ class atm():
 
     def getCashAmount(customer_name):
         cursor = db.cursor()
-        redis_client = redis.Redis("127.0.0.1", 6379)
+        redis_client = redis.Redis("localhost", 6379)
 
-        moneyFromChache = redis_client.get("customer_name")
+        moneyFromcache = redis_client.get(customer_name)
 
-        if moneyFromChache == "(nil)":
-            redis_client.set(customer_name, customer_cash)
+        if moneyFromcache is None:
+            print("set into cache")
+            cursor.execute(f"select customer_cash from customers_table where customer_name = '{customer_name}';")
+            customer_cash = cursor.fetchone()
+            redis_client.set(customer_name, customer_cash[0])
 
-        if moneyFromChache != "(nil)":
-            return int(moneyFromChache)
+        elif moneyFromcache is not None:
+            print("from cache", moneyFromcache)
+            return int(moneyFromcache)
 
         try:
+            print("get from db")
             cursor.execute(f"select customer_cash from customers_table where customer_name = '{customer_name}';")
             customer_cash = cursor.fetchone()
             cursor.close()
