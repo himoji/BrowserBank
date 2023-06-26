@@ -11,21 +11,13 @@ TODO: loan system
 check when send money
 '''
 #import mysql driver and connect to database with (host, user, password and database name) info
-import mysql.connector
-import getpass
+import psycopg2
+import redis
 
-try:
-    db = mysql.connector.connect(
-        host = 'localhost',
-        user = 'root',
-        password = 'admin',
-        database = 'customers_db'
-    )
-    #cursor = db.cursor()
-    print("Connected successfully")
 
-except Exception as err:
-    print("Connection refused\n", err)
+db = psycopg2.connect(database="db", user="postgres", password="admin", port=13337)
+cursor = db.cursor()
+print("Connected successfully")
 
 
 def securityCheck(*args) -> bool:
@@ -70,7 +62,7 @@ class accountManagment:
         '''
         cursor = db.cursor()
 
-        cursor.execute(f'select customer_id from customers_table where customer_name = "{customer_name.lower()}" and customer_password = "{password}";') # type: ignore
+        cursor.execute(f"select customer_id from customers_table where customer_name = '{customer_name.lower()}' and customer_password = '{password}';") # type: ignore
         result = cursor.fetchone()
         cursor.close()
         try:
@@ -87,12 +79,12 @@ class accountManagment:
         '''
         cursor = db.cursor()
 
-        cursor.execute(f'select customer_id from customers_table where customer_name = "{customer_name.lower()}" and customer_password = "{old_password}";') # type: ignore
+        cursor.execute(f"select customer_id from customers_table where customer_name = '{customer_name.lower()}' and customer_password = '{old_password}';") # type: ignore
         result = cursor.fetchone()
 
         try: 
             if isinstance(result[0], int) and securityCheck(customer_name, old_password, new_password)==False:
-                cursor.execute(f'update customers_table set customer_password = "{new_password}" where customer_name = "{customer_name}";')
+                cursor.execute(f"update customers_table set customer_password = '{new_password}' where customer_name = '{customer_name}';")
                 cursor.close()
                 db.commit()
                 return True 
@@ -108,7 +100,7 @@ class accountManagment:
         cursor = db.cursor()
         try: 
             if securityCheck(customer_name, password)==False:
-                cursor.execute(f'insert into customers_table(customer_name, customer_password) values ("{customer_name}", "{password}");')
+                cursor.execute(f"insert into customers_table(customer_name, customer_password) values ('{customer_name}', '{password}');")
                 cursor.close()
                 db.commit()
                 return True
@@ -125,7 +117,7 @@ class accountManagment:
         cursor = db.cursor()
         try: 
             if securityCheck(customer_name, password)==False:
-                cursor.execute(f'delete from customers_table where customer_name = "{customer_name}" and customer_password = "{password}";')
+                cursor.execute(f"delete from customers_table where customer_name = '{customer_name}' and customer_password = '{password}';")
                 cursor.close()
                 db.commit()
                 return True
@@ -144,7 +136,7 @@ class atm():
         try:
             if int(cash) >= 0 and securityCheck(customer_name)==False:
                 print("Depositing cash")
-                cursor.execute(f'update customers_table set customer_cash = customer_cash + {cash} where customer_name = "{customer_name}";')
+                cursor.execute(f"update customers_table set customer_cash = customer_cash + {cash} where customer_name = '{customer_name}';")
                 cursor.close()
                 db.commit()
                 return True
@@ -161,7 +153,7 @@ class atm():
         cursor = db.cursor()
         try:
             if int(cash) >= 0 and securityCheck(customer_name)==False:
-                cursor.execute(f'update customers_table set customer_cash = customer_cash - {cash} where customer_name = "{customer_name}";')
+                cursor.execute(f"update customers_table set customer_cash = customer_cash - {cash} where customer_name = '{customer_name}';")
                 cursor.close()
                 db.commit()
                 return True
@@ -179,7 +171,7 @@ class atm():
 
         try: #check how much money customer do have
             print("Checking cash")
-            cursor.execute(f'select customer_cash from customers_table where customer_name = "{customer_name}";')
+            cursor.execute(f"select customer_cash from customers_table where customer_name = '{customer_name}';")
             cash_on_sender_card = cursor.fetchone()[0]
             print(cash_on_sender_card)
         except: return False
@@ -191,9 +183,9 @@ class atm():
 
             if cash >= 0 and cash_on_sender_card - cash >= 0 and securityCheck(customer_name, taker)==False:
                 print("Sending cash")
-                cursor.execute(f'update customers_table set customer_cash = customer_cash + {cash} where customer_name = "{taker}";')
+                cursor.execute(f"update customers_table set customer_cash = customer_cash + {cash} where customer_name = '{taker}';")
                 print("send #1")
-                cursor.execute(f'update customers_table set customer_cash = customer_cash - {cash} where customer_name = "{customer_name}";')
+                cursor.execute(f"update customers_table set customer_cash = customer_cash - {cash} where customer_name = '{customer_name}';")
                 print("send #2")
                 cursor.close()
                 db.commit()
@@ -204,8 +196,18 @@ class atm():
 
     def getCashAmount(customer_name):
         cursor = db.cursor()
+        redis_client = redis.Redis("127.0.0.1", 6379)
+
+        moneyFromChache = redis_client.get("customer_name")
+
+        if moneyFromChache == "(nil)":
+            redis_client.set(customer_name, customer_cash)
+
+        if moneyFromChache != "(nil)":
+            return int(moneyFromChache)
+
         try:
-            cursor.execute(f'select customer_cash from customers_table where customer_name = "{customer_name}";')
+            cursor.execute(f"select customer_cash from customers_table where customer_name = '{customer_name}';")
             customer_cash = cursor.fetchone()
             cursor.close()
             return customer_cash[0]
